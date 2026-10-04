@@ -57,17 +57,18 @@ If it has earned a place on your server or computer, toss a coin to your knight:
 ## Table of Contents
 
 1. [Overview](#1-overview)
-2. [Quick Start](#2-quick-start)
-3. [Configuration](#3-configuration)
-4. [Built-in or External Services](#4-built-in-or-external-services)
-5. [Switching from Another Seafile Template](#5-switching-from-another-seafile-template)
-6. [Reverse Proxy](#6-reverse-proxy)
-7. [Updating](#7-updating)
-8. [Troubleshooting](#8-troubleshooting)
-9. [Building Locally](#9-building-locally)
-10. [License](#10-license)
-11. [How AI is used here](#11-how-ai-is-used-here)
-12. [Support this project](#12-support-this-project)
+2. [Screenshots](#2-screenshots)
+3. [Quick Start](#3-quick-start)
+4. [Configuration](#4-configuration)
+5. [Built-in or External Services](#5-built-in-or-external-services)
+6. [Switching from Another Seafile Template](#6-switching-from-another-seafile-template)
+7. [Reverse Proxy](#7-reverse-proxy)
+8. [Updating](#8-updating)
+9. [Troubleshooting](#9-troubleshooting)
+10. [Building Locally](#10-building-locally)
+11. [License](#11-license)
+12. [How AI is used here](#12-how-ai-is-used-here)
+13. [Support this project](#13-support-this-project)
 
 <br>
 
@@ -85,19 +86,32 @@ This image is the official one with a small layer in front of it:
 
 The official scripts in the image still do the rest, including the first-run setup and the upgrades between Seafile versions. The folder layout under `/shared` is the same as in the official image, so a setup made with it keeps working here.
 
-<p align="center">
-  <img src=".github/assets/screenshots/login.png" alt="Seafile sign-in page" width="90%"><br>
-  <em>The sign-in page after the first start.</em>
-</p>
+<br>
+
+## 2. Screenshots
 
 <p align="center">
-  <img src=".github/assets/screenshots/libraries.png" alt="Seafile library list" width="90%"><br>
-  <em>The library list of the admin account.</em>
+  <img src=".github/assets/screenshots/seafile-1.png" alt="Seafile library list with five libraries" width="100%">
+  <br><em>Your libraries, each synced and shared on its own.</em>
 </p>
 
 <br>
 
-## 2. Quick Start
+<p align="center">
+  <img src=".github/assets/screenshots/seafile-2.png" alt="Files and folders inside the Documents library" width="100%">
+  <br><em>Inside a library: folders, documents and the file tree on the left.</em>
+</p>
+
+<br>
+
+<p align="center">
+  <img src=".github/assets/screenshots/seafile-3.png" alt="Seafile sign-in page" width="100%">
+  <br><em>The sign-in page, ready a minute after the first start.</em>
+</p>
+
+<br>
+
+## 3. Quick Start
 
 1. Install **Seafile** from Community Applications.
 2. Set **Server hostname** to the address your clients will use, for example `192.168.1.10:8000` or `seafile.example.com`. Leave out `http://`.
@@ -123,7 +137,7 @@ docker run -d --name seafile \
 
 <br>
 
-## 3. Configuration
+## 4. Configuration
 
 | Variable | Default | What it does |
 | --- | --- | --- |
@@ -157,7 +171,7 @@ Generated values are written once to `/shared/secrets.env` and read from there o
 
 <br>
 
-## 4. Built-in or External Services
+## 5. Built-in or External Services
 
 **MariaDB.** If you already run one, use it: one database server is easier to back up and to watch than several. The built-in MariaDB is for servers that have none. It keeps its data in `/shared/mariadb`, so it moves and gets backed up together with the rest of Seafile. Do not switch an existing installation from one to the other. Seafile's data lives in that database, and the switch gives it an empty one.
 
@@ -169,7 +183,7 @@ If you would rather not hand the root password to the container, create the thre
 
 <br>
 
-## 5. Switching from Another Seafile Template
+## 6. Switching from Another Seafile Template
 
 The layout under `/shared` is the one from the official image, which the other Seafile templates in Community Applications use as well. To switch:
 
@@ -182,13 +196,13 @@ Seafile 14 cannot go back to 13. When the old container still runs Seafile 13, t
 
 <br>
 
-## 6. Reverse Proxy
+## 7. Reverse Proxy
 
 Point the proxy at the container's port 80, set `SEAFILE_SERVER_PROTOCOL=https` and set `SEAFILE_SERVER_HOSTNAME` to the public name, for example `seafile.example.com`. The proxy has to pass WebSocket connections for `/notification` when the notification server is on, and it should allow large uploads, since nginx inside the container already does.
 
 <br>
 
-## 7. Updating
+## 8. Updating
 
 Updates come as new images. Seafile runs its own upgrade scripts when it finds a newer version than the one that created your data, so updating means pulling the image and starting the container.
 
@@ -196,7 +210,7 @@ This image currently ships **Seafile 14.0.8**, which upstream still labels as te
 
 <br>
 
-## 8. Troubleshooting
+## 9. Troubleshooting
 
 **The container stops right after starting.** Look at the last lines of the log. A line starting with `[prepare]` names the setting that is missing.
 
@@ -210,7 +224,7 @@ This image currently ships **Seafile 14.0.8**, which upstream still labels as te
 
 <br>
 
-## 9. Building Locally
+## 10. Building Locally
 
 ```bash
 git clone https://github.com/junkerderprovinz/seafile.git
@@ -222,13 +236,13 @@ The startup layer lives in `rootfs/`: `etc/my_init.d/00_prepare.sh` runs before 
 
 <br>
 
-## 10. License
+## 11. License
 
 The scripts and configuration in this repository are licensed under the [GNU Affero General Public License v3.0](LICENSE). Seafile itself is released by Seafile Ltd. under its own licenses; the Community Edition server is AGPL-3.0 as well. This is an independent packaging for Unraid and is not affiliated with Seafile Ltd.
 
 <br>
 
-## 11. How AI is used here
+## 12. How AI is used here
 
 One knight builds this, and AI is one of the tools I work with, the same way I work with an editor or a compiler. It helps me write code and documentation and it checks my work, and that saves me a good many evenings. It does not make the decisions, though. I read and understand everything before it ships, and if something here breaks, that is on me and not on the tool.
 
@@ -236,7 +250,7 @@ You do not have to take my word for it. The code is open and every release note 
 
 <br>
 
-## 12. Support this project
+## 13. Support this project
 
 Questions, bugs, ideas or feature requests? Please [open a GitHub issue](https://github.com/junkerderprovinz/seafile/issues).
 
