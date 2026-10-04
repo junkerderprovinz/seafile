@@ -117,6 +117,10 @@ if enabled "${BUILTIN_MARIADB:-false}"; then
     root_password=$(secret MARIADB_ROOT_PASSWORD)
     set_env INIT_SEAFILE_MYSQL_ROOT_PASSWORD "$root_password"
     install -d -o mysql -g mysql /run/mysqld
+    if ! chpst -u mysql test -x /shared; then
+        log "Letting the mysql user pass through /shared, which the built-in MariaDB needs."
+        chmod o+x /shared
+    fi
     if [ ! -d /shared/mariadb/mysql ]; then
         log "Creating the built-in MariaDB in /shared/mariadb."
         init_mariadb "$root_password"
