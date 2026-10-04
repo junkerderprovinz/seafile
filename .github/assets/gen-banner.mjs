@@ -87,3 +87,16 @@ console.log("banner + banner-dark written");
 // The mark has its own shape and colour, so the CA icon keeps a transparent ground.
 writeFileSync(join(HERE, "icon.png"), new Resvg(iconSrc, { fitTo: { mode: "width", value: 512 } }).render().asPng());
 console.log("icon.png written");
+
+// The forum thread opens with the mark alone on white, the claim stands as text above it.
+const LOGO_ONLY_INK = 540;
+const sL = LOGO_ONLY_INK / Math.max(mb.width, mb.height);
+const logoOnly = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Seafile">
+  <rect width="${W}" height="${H}" fill="#ffffff"/>
+  <g transform="translate(${(W / 2 - (mb.x + mb.width / 2) * sL).toFixed(2)},${(H / 2 - (mb.y + mb.height / 2) * sL).toFixed(2)}) scale(${sL.toFixed(5)})">${iconInner}</g>
+</svg>
+`;
+writeFileSync(join(HERE, "banner-logo.svg"), logoOnly);
+writeFileSync(join(HERE, "banner-logo.png"), new Resvg(logoOnly, { background: "#ffffff", fitTo: { mode: "original" } }).render().asPng());
+console.log("banner-logo written");

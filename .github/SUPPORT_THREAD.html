@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!--
+  Unraid Community Applications support thread for Seafile.
+  Structure: name and claim -> banner -> buttons -> What is this? ->
+  Highlights & Features -> Requirements -> Bugs, Problems, Wishes -> Credits
+  -> disclaimer.
+  The forum drops <style> and class attributes, so sizes are attributes and the
+  buttons sit in a one-row table to stay side by side.
+  Paste into the Unraid forum editor's source view.
+  Title: [Support] junkerderprovinz - Seafile
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[Support] junkerderprovinz - Seafile</title>
+</head>
+<body>
+
+<h1 style="text-align:center">Seafile</h1>
+<p style="text-align:center"><em>One container. No homework.</em></p>
+
+<p style="text-align:center">
+  <a href="https://github.com/junkerderprovinz/seafile">
+    <img src="https://raw.githubusercontent.com/junkerderprovinz/seafile/main/.github/assets/banner-logo.png" alt="Seafile" width="100%">
+  </a>
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><p><a href="https://ca.unraid.net/apps?q=seafile"><img src="https://raw.githubusercontent.com/junkerderprovinz/seafile/main/.github/assets/support-buttons/install-on-unraid.svg" alt="Install on Unraid" width="240"></a></p></td>
+      <td><p><a href="https://github.com/junkerderprovinz/seafile"><img src="https://raw.githubusercontent.com/junkerderprovinz/seafile/main/.github/assets/support-buttons/view-on-github.svg" alt="View on GitHub" width="240"></a></p></td>
+      <td><p><a href="https://buymeacoffee.com/junkerderprovinz"><img src="https://raw.githubusercontent.com/junkerderprovinz/seafile/main/.github/assets/support-buttons/buy-me-a-coffee.svg" alt="Buy me a coffee" width="240"></a></p></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>What is this?</h2>
+<p><a href="https://www.seafile.com">Seafile</a> is a file sync and share server with desktop and
+mobile clients, libraries you can encrypt on the client, and built-in wikis. Its official image
+expects MariaDB, Redis and the notification server as containers of their own on a shared
+network, plus a JWT key you make by hand. This is the official Seafile 14 image with a small
+startup step in front of it, so it installs from one template: the secrets are generated on the
+first start, and MariaDB, Redis and the notification server can run inside the same container
+when you have none of your own. Seafile's own scripts still set it up, start it and upgrade
+it.</p>
+
+<h2>Highlights &amp; Features</h2>
+<ul>
+  <li>The JWT key, the database password and, if you leave it empty, the admin password are generated on the first start and kept in <code>secrets.env</code> in the data folder; the log names a generated admin password</li>
+  <li>Built-in MariaDB and Redis, each switched on in the template and listening only inside the container; external servers stay the default</li>
+  <li>The notification server, switched on in the template, so the desktop and mobile clients see changes when they happen</li>
+  <li>A missing hostname, database host or Redis host stops the start with one line saying what to set, instead of a "Page unavailable"</li>
+  <li>Seafile stops before the built-in database on shutdown</li>
+  <li>The data folder keeps the official layout, so a setup from another Seafile template switches over by pointing at the same folder</li>
+  <li>Images: <code>junkerderprovinz/seafile:latest</code> on Docker Hub and <code>ghcr.io/junkerderprovinz/seafile:latest</code>, for amd64</li>
+</ul>
+
+<h2>Requirements</h2>
+<ul>
+  <li>Unraid 6.10+</li>
+  <li>A MariaDB and a Redis server, or Built-in MariaDB and Built-in Redis set to <code>true</code></li>
+  <li>Server hostname set to the address your clients use, such as <code>192.168.1.10:8000</code> or <code>seafile.example.com</code>; desktop clients cannot sync when it is wrong</li>
+  <li>Seafile 14 is still labelled testing upstream and cannot be downgraded: back up the data folder and the database before every update</li>
+</ul>
+
+<h2>Bugs, Problems, Wishes</h2>
+<p>Something not working, a question or an idea? The best place for it is an issue on GitHub:
+<a href="https://github.com/junkerderprovinz/seafile/issues">github.com/junkerderprovinz/seafile/issues</a>.
+Everything stays in one place there, and nothing gets lost in a long thread.</p>
+<p>For a bug, whether you post it there or here, these help:</p>
+<ul>
+  <li>Unraid version (Settings → System Information)</li>
+  <li>Image tag (<code>latest</code> or a pinned version)</li>
+  <li>Output of <code>docker logs --tail 200 Seafile</code></li>
+  <li>Whether you use the built-in MariaDB and Redis or your own, and whether Seafile runs behind a reverse proxy</li>
+  <li>Whether this is a new install or one you switched over from another Seafile template</li>
+</ul>
+
+<h2>Credits</h2>
+<p>All the real work is <a href="https://www.seafile.com">Seafile</a> (AGPL-3.0) by Seafile Ltd.,
+with <a href="https://mariadb.org">MariaDB</a> and <a href="https://redis.io">Redis</a> next to it.
+This project only makes their official image install from one template. If it spared you an
+evening of compose files, you can <a href="https://buymeacoffee.com/junkerderprovinz">buy me a coffee</a>.</p>
+
+<hr>
+
+<p style="text-align:center"><em>Independent packaging, not affiliated with Seafile Ltd. AGPL-3.0 licensed: you run it, you own your data and the responsibility.</em></p>
+
+</body>
+</html>
