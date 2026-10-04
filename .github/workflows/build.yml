@@ -87,8 +87,8 @@ jobs:
           }
           wait_started 0
 
-          curl -fsS "$B/api2/ping/" | grep -q pong
-          curl -fsS "$B/notification/ping" | grep -q pong \
+          grep -q pong <<< "$(curl -fsS "$B/api2/ping/")"
+          grep -q pong <<< "$(curl -fsS "$B/notification/ping")" \
             || { echo "::error::The notification server does not answer through nginx"; exit 1; }
 
           PW="$(sudo sed -n 's/^INIT_SEAFILE_ADMIN_PASSWORD=//p' "${DATA}/secrets.env")"
@@ -113,10 +113,13 @@ jobs:
           wait_started 1
           [ "$(fetch)" = "${SENT}" ] || { echo "::error::The file is gone after a restart"; exit 1; }
 
-          # Seafile has to stop before the built-in Redis and MariaDB do.
-          docker logs seafile-smoke 2>&1 | grep -q 'Stopping seahub' \
+          # Seafile has to stop before the built-in Redis and MariaDB do. The log
+          # goes to a file first: grep -q stops reading at the first match, and
+          # under pipefail the SIGPIPE that docker logs gets would count as a miss.
+          docker logs seafile-smoke > /tmp/smoke.log 2>&1
+          grep -q 'Stopping seahub' /tmp/smoke.log \
             || { echo "::error::Seafile was not stopped before shutdown"; exit 1; }
-          if docker logs seafile-smoke 2>&1 | grep -q '6379. Connection refused'; then
+          if grep -q '6379. Connection refused' /tmp/smoke.log; then
             echo "::error::Seafile lost Redis during shutdown"
             exit 1
           fi
