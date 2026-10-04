@@ -85,23 +85,18 @@ The official scripts in the image still do the rest, including the first-run set
 
 ## 2. Screenshots
 
+The libraries and files in these pictures are made up.
+
 <p align="center">
-  <img src=".github/assets/screenshots/seafile-1.png" alt="Seafile library list with five libraries" width="100%">
-  <br><em>Your libraries, each synced and shared on its own.</em>
+  <img src=".github/assets/screenshots/seafile-1.png" alt="Seafile's library list in a browser, five libraries in dark mode" width="100%">
+  <br><em>Seafile in any browser on your network, from the container on your server.</em>
 </p>
 
 <br>
 
 <p align="center">
-  <img src=".github/assets/screenshots/seafile-2.png" alt="Files and folders inside the Documents library" width="100%">
-  <br><em>Inside a library: folders, documents and the file tree on the left.</em>
-</p>
-
-<br>
-
-<p align="center">
-  <img src=".github/assets/screenshots/seafile-3.png" alt="Seafile sign-in page" width="100%">
-  <br><em>The sign-in page, ready a minute after the first start.</em>
+  <img src=".github/assets/screenshots/seafile-2.png" alt="Folders and documents inside the Documents library, with the file tree on the left" width="100%">
+  <br><em>Inside a library: folders, documents and the file tree.</em>
 </p>
 
 <br>
