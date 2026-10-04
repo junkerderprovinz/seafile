@@ -21,6 +21,12 @@
       "automergeType": "branch",
       "commitMessagePrefix": "ci:",
       "labels": ["github-actions"]
+    },
+    {
+      "description": "Seafile and its notification server ship together and have to carry the same version",
+      "matchPackageNames": ["seafileltd/seafile-mc", "seafileltd/notification-server"],
+      "groupName": "Seafile",
+      "labels": ["base-image"]
     }
   ]
 }

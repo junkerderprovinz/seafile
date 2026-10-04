@@ -1,0 +1,245 @@
+name: Build & Push
+
+# Builds the image, smoke-tests it and pushes it to GHCR, and to Docker Hub once
+# the DOCKERHUB_USERNAME variable and the DOCKERHUB_TOKEN secret are both set.
+#
+# Tags:
+#   * Tag vX.Y.Z           -> X.Y.Z, X.Y, and latest if it is the highest version tag
+#   * Push to main         -> edge, sha-<short>
+#   * Push to other branch -> <branch> on GHCR only, for testing
+#
+# The stock Seafile image is amd64 only, so this one is too.
+
+on:
+  push:
+    branches: [ '**', '!renovate/**' ]
+    tags: [ 'v*.*.*' ]
+    paths-ignore: [ '**.md', 'LICENSE' ]
+  workflow_dispatch:
+
+# Two quick pushes to a branch race for its tag, so the older run is cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ (github.ref_type == 'branch' && github.ref != 'refs/heads/main') && github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+env:
+  IMAGE_NAME: seafile
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+
+      - name: Build image for the smoke test
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: seafile:smoke
+          cache-from: type=gha
+
+      # The promise of the image is a working Seafile from one container with no
+      # passwords typed in. So the test starts it like that, signs in with the
+      # generated admin password, sends a file through it, restarts it and
+      # fetches the file again.
+      - name: "Smoke test: built-in services, file round trip, restart"
+        run: |
+          set -euo pipefail
+          DATA="$(mktemp -d)"
+          B=http://127.0.0.1:8080
+          cleanup() {
+            docker logs seafile-smoke 2>&1 | grep -vF -e '░' -e '▒' -e '▓' -e '█' | tail -80 || true
+            docker rm -f seafile-smoke >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          docker run -d --name seafile-smoke -p 8080:80 -v "${DATA}:/shared" \
+            -e SEAFILE_SERVER_HOSTNAME=127.0.0.1:8080 \
+            -e INIT_SEAFILE_ADMIN_EMAIL=admin@example.com \
+            -e BUILTIN_MARIADB=true -e BUILTIN_REDIS=true -e ENABLE_NOTIFICATION_SERVER=true \
+            seafile:smoke
+
+          wait_started() {
+            local seen=$1
+            for i in $(seq 1 120); do
+              [ "$(docker logs seafile-smoke 2>&1 | grep -c 'Seahub is started')" -gt "$seen" ] && return 0
+              [ "$(docker inspect -f '{{.State.Status}}' seafile-smoke)" = running ] \
+                || { echo "::error::The container stopped"; return 1; }
+              sleep 3
+            done
+            echo "::error::Seahub did not start within six minutes"
+            return 1
+          }
+          wait_started 0
+
+          grep -q pong <<< "$(curl -fsS "$B/api2/ping/")"
+          grep -q pong <<< "$(curl -fsS "$B/notification/ping")" \
+            || { echo "::error::The notification server does not answer through nginx"; exit 1; }
+
+          PW="$(sudo sed -n 's/^INIT_SEAFILE_ADMIN_PASSWORD=//p' "${DATA}/secrets.env")"
+          [ -n "${PW}" ] || { echo "::error::No generated admin password in secrets.env"; exit 1; }
+          TOKEN="$(curl -fsS -d "username=admin@example.com&password=${PW}" "$B/api2/auth-token/" | jq -r .token)"
+          AUTH="Authorization: Token ${TOKEN}"
+          REPO="$(curl -fsS -X POST -H "$AUTH" -d name=smoke "$B/api2/repos/" | jq -r .repo_id)"
+
+          # A notification server that answers ping can still receive nothing from
+          # seaf-server, so a client subscribes to the library before the upload
+          # and has to hear about it.
+          sudo apt-get install -y -qq python3-websocket >/dev/null
+          JWT="$(curl -fsS -H "$AUTH" "$B/api/v2.1/repos/${REPO}/repo-notification-jwt-token/" | jq -r .token)"
+          python3 - "$REPO" "$JWT" > /tmp/notify.log 2>&1 <<'PY' &
+          import json, sys, websocket
+          ws = websocket.create_connection("ws://127.0.0.1:8080/notification", timeout=60)
+          ws.send(json.dumps({"type": "subscribe", "content": {"repos": [{"id": sys.argv[1], "jwt_token": sys.argv[2]}]}}))
+          print(json.loads(ws.recv()).get("type"), flush=True)
+          PY
+          LISTENER=$!
+          sleep 3
+
+          head -c 1048576 /dev/urandom > /tmp/probe.bin
+          SENT="$(sha256sum /tmp/probe.bin | cut -d' ' -f1)"
+          UP="$(curl -fsS -H "$AUTH" "$B/api2/repos/${REPO}/upload-link/?p=/" | jq -r .)"
+          curl -fsS -H "$AUTH" -F file=@/tmp/probe.bin -F parent_dir=/ "${UP}?ret-json=1" >/dev/null
+
+          wait "$LISTENER" || true
+          grep -qx repo-update /tmp/notify.log \
+            || { cat /tmp/notify.log; echo "::error::The notification server did not report the upload"; exit 1; }
+
+          fetch() {
+            local url
+            url="$(curl -fsS -H "$AUTH" "$B/api2/repos/${REPO}/file/?p=/probe.bin" | jq -r .)"
+            curl -fsS "$url" | sha256sum | cut -d' ' -f1
+          }
+          [ "$(fetch)" = "${SENT}" ] || { echo "::error::The file came back different"; exit 1; }
+
+          docker restart seafile-smoke >/dev/null
+          wait_started 1
+          [ "$(fetch)" = "${SENT}" ] || { echo "::error::The file is gone after a restart"; exit 1; }
+
+          # Seafile has to stop before the built-in Redis and MariaDB do. The log
+          # goes to a file first: grep -q stops reading at the first match, and
+          # under pipefail the SIGPIPE that docker logs gets would count as a miss.
+          docker logs seafile-smoke > /tmp/smoke.log 2>&1
+          grep -q 'Stopping seahub' /tmp/smoke.log \
+            || { echo "::error::Seafile was not stopped before shutdown"; exit 1; }
+          if grep -q '6379. Connection refused' /tmp/smoke.log; then
+            echo "::error::Seafile lost Redis during shutdown"
+            exit 1
+          fi
+          echo "Smoke test passed."
+
+      - name: "Smoke test: a missing Redis host stops the start with one clear line"
+        run: |
+          set -euo pipefail
+          docker run --name seafile-noredis \
+            -e SEAFILE_SERVER_HOSTNAME=localhost -e SEAFILE_MYSQL_DB_HOST=db \
+            seafile:smoke > /tmp/noredis.log 2>&1 || true
+          docker rm -f seafile-noredis >/dev/null 2>&1 || true
+          grep -q 'REDIS_HOST is empty' /tmp/noredis.log \
+            || { cat /tmp/noredis.log; echo "::error::No message for a missing Redis host"; exit 1; }
+
+      # Report-only, so a finding never blocks the build; results land in the
+      # repository's Security tab.
+      - name: Scan image for CVEs (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: seafile:smoke
+          format: sarif
+          output: trivy.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Upload Trivy results to the Security tab
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
+
+      # latest goes only to the highest version tag, so recutting an old tag
+      # cannot move it backwards.
+      - name: Is this the highest version tag?
+        id: highest
+        run: |
+          top="$(git tag -l 'v[0-9]*' | sort -V | tail -1)"
+          if [ "${GITHUB_REF_TYPE}" = tag ] && [ "${GITHUB_REF_NAME}" = "${top}" ]; then
+            echo "latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "latest=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Login to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        if: ${{ vars.DOCKERHUB_USERNAME != '' && (github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Image tags
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+            name=docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }},enable=${{ vars.DOCKERHUB_USERNAME != '' && (github.ref_type == 'tag' || github.ref == 'refs/heads/main') }}
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ steps.highest.outputs.latest }}
+            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,format=short,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' && !contains(fromJSON('["latest","edge"]'), github.ref_name) }}
+
+      - name: Push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Mirror the README to the Docker Hub description on releases. Skipped until
+  # DOCKERHUB_TOKEN is set.
+  dockerhub-description:
+    needs: build
+    if: ${{ vars.DOCKERHUB_USERNAME != '' && github.ref_type == 'tag' }}
+    # A cosmetic sync; a refused credential here must not fail the published image.
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Sync README to Docker Hub
+        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ vars.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          short-description: "Seafile for Unraid in one container: generated secrets, optional built-in MariaDB, Redis and notification server."
+          enable-url-completion: true

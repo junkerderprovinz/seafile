@@ -1,0 +1,4 @@
+#!/bin/bash
+# Seahub only keeps a cache in Redis, so nothing is written to disk.
+exec 2>&1
+exec chpst -u redis redis-server --bind 127.0.0.1 --port 6379 --save '' --appendonly no --loglevel warning
