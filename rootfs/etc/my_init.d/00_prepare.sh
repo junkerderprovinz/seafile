@@ -147,6 +147,10 @@ if enabled "${ENABLE_NOTIFICATION_SERVER:-false}"; then
     if [ -z "${NOTIFICATION_SERVER_URL:-}" ]; then
         set_env NOTIFICATION_SERVER_URL "${SEAFILE_SERVER_PROTOCOL:-http}://${SEAFILE_SERVER_HOSTNAME}/notification"
     fi
+    # seaf-server has no default for this and otherwise never reports a change.
+    if [ -z "${INNER_NOTIFICATION_SERVER_URL:-}" ]; then
+        set_env INNER_NOTIFICATION_SERVER_URL http://127.0.0.1:8083
+    fi
     cp /usr/local/share/seafile/notification.conf /etc/nginx/seafile.d/
     service notification-server on
 else

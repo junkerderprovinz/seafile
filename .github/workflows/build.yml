@@ -97,10 +97,28 @@ jobs:
           AUTH="Authorization: Token ${TOKEN}"
           REPO="$(curl -fsS -X POST -H "$AUTH" -d name=smoke "$B/api2/repos/" | jq -r .repo_id)"
 
+          # A notification server that answers ping can still receive nothing from
+          # seaf-server, so a client subscribes to the library before the upload
+          # and has to hear about it.
+          sudo apt-get install -y -qq python3-websocket >/dev/null
+          JWT="$(curl -fsS -H "$AUTH" "$B/api/v2.1/repos/${REPO}/repo-notification-jwt-token/" | jq -r .token)"
+          python3 - "$REPO" "$JWT" > /tmp/notify.log 2>&1 <<'PY' &
+          import json, sys, websocket
+          ws = websocket.create_connection("ws://127.0.0.1:8080/notification", timeout=60)
+          ws.send(json.dumps({"type": "subscribe", "content": {"repos": [{"id": sys.argv[1], "jwt_token": sys.argv[2]}]}}))
+          print(json.loads(ws.recv()).get("type"), flush=True)
+          PY
+          LISTENER=$!
+          sleep 3
+
           head -c 1048576 /dev/urandom > /tmp/probe.bin
           SENT="$(sha256sum /tmp/probe.bin | cut -d' ' -f1)"
           UP="$(curl -fsS -H "$AUTH" "$B/api2/repos/${REPO}/upload-link/?p=/" | jq -r .)"
           curl -fsS -H "$AUTH" -F file=@/tmp/probe.bin -F parent_dir=/ "${UP}?ret-json=1" >/dev/null
+
+          wait "$LISTENER" || true
+          grep -qx repo-update /tmp/notify.log \
+            || { cat /tmp/notify.log; echo "::error::The notification server did not report the upload"; exit 1; }
 
           fetch() {
             local url
