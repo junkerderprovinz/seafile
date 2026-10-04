@@ -1,0 +1,39 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    "docker:pinDigests",
+    ":dependencyDashboard"
+  ],
+  "timezone": "Europe/Vienna",
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "packageRules": [
+    {
+      "description": "Seafile and its notification server ship together and have to carry the same version.",
+      "matchPackageNames": [
+        "seafileltd/seafile-mc",
+        "seafileltd/notification-server"
+      ],
+      "groupName": "Seafile",
+      "labels": [
+        "base-image"
+      ]
+    },
+    {
+      "description": "GitHub Actions: auto-merge all updates.",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "commitMessagePrefix": "ci:",
+      "labels": [
+        "github-actions"
+      ]
+    }
+  ]
+}

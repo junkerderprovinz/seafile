@@ -1,0 +1,12 @@
+[mysqld]
+datadir = /shared/mariadb
+bind-address = 127.0.0.1
+skip-name-resolve
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+# Unraid's kernel refuses io_uring and libaio is not reachable from a container
+# either, so MariaDB would try both and warn on every start.
+innodb_use_native_aio = 0
+# Without a binary log Ubuntu's expiry setting only produces a warning.
+expire_logs_days = 0
+log_warnings = 1

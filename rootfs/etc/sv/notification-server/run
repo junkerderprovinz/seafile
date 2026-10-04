@@ -1,0 +1,7 @@
+#!/bin/bash
+# The server reads Seafile's databases, which the first start has to create.
+exec 2>&1
+until [ -f /shared/seafile/seafile-data/current_version ]; do
+    sleep 5
+done
+exec /opt/seafile/notification-server -c /opt/seafile -l /shared/seafile/logs/notification-server.log

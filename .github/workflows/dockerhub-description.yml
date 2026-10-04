@@ -1,0 +1,34 @@
+# Push the README to the Docker Hub repo's Overview, on demand and nothing else.
+#
+# build.yml does this after every build of main, but only after a full multi-arch
+# build. A run that builds nothing tells a broken credential apart from a wrong
+# secret in this repo.
+#
+# Manual only. It never builds, never pushes an image, and touches nothing but
+# the description text on Docker Hub.
+name: Docker Hub description
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Sync README to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # No gate and no continue-on-error here, unlike build.yml: this workflow
+      # exists to make a failure visible, so a missing secret or a refused
+      # login must turn the run red instead of passing quietly.
+      - name: Sync README to Docker Hub
+        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ vars.DOCKERHUB_USERNAME }}/seafile
+          short-description: "Seafile for Unraid in one container: generated secrets, optional built-in MariaDB, Redis and notification server."
+          enable-url-completion: true
