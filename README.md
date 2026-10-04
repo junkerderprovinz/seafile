@@ -23,16 +23,11 @@ secrets on the first start, and it can run MariaDB, Redis and the notification s
 same container when you have none of your own.
 </p>
 
-<div align="center">
+<p align="center">
+  <a href="https://github.com/junkerderprovinz/seafile/issues/new/choose"><img src=".github/assets/in-development.png" alt="In development, testers welcome: report a bug" width="100%"></a>
+</p>
 
-> # 🧪 In development: testers welcome
->
-> **Seafile is still in development, so bugs can happen.**<br>
-> Everyone is invited to test it and report what they find.
->
-> **[Report a bug](https://github.com/junkerderprovinz/seafile/issues/new/choose)**
-
-</div>
+<br>
 
 <p align="center">
 A one-knight job: I build it, keep it running, work through the issues and add what people ask for, until nothing is missing. It is free, with no accounts, no telemetry, no ads and no paid tier. No asterisk anywhere. Nothing readable ever leaves your own walls. Forged on evenings and weekends, with heart and stubbornness.
