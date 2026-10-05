@@ -66,8 +66,9 @@ If it has earned a place on your server or computer, toss a coin to your knight:
 1. [What it looks like](#1-what-it-looks-like)
 2. [What it does](#2-what-it-does)
 3. [Getting started](#3-getting-started)
-4. [How AI is used here](#4-how-ai-is-used-here)
-5. [Support this project](#5-support-this-project)
+4. [Web office](#4-web-office)
+5. [How AI is used here](#5-how-ai-is-used-here)
+6. [Support this project](#6-support-this-project)
 
 <br>
 
@@ -96,6 +97,7 @@ The libraries and files in these pictures are made up.
 - **Secrets on the first start.** It generates the JWT key, the database password and, if you leave it empty, the admin password, and keeps them in `secrets.env` in your appdata folder.
 - **MariaDB and Redis built in, if you want them.** Both are off by default, because most Unraid servers already have a MariaDB. Switched on, they run next to Seafile and listen only on `127.0.0.1`.
 - **Live updates in the clients.** The notification server is included, so the desktop and mobile clients hear about a change when it happens instead of asking on a timer.
+- **Office files in the browser.** Pick Euro-Office, Collabora or OnlyOffice in the template, and Word, Excel and PowerPoint files open and save inside Seafile.
 - **A clear stop instead of "Page unavailable".** If the database or Redis host is missing, the container stops with one line saying what to set.
 - **The official layout.** The official scripts still run the setup and the upgrades, and `/shared` looks the same, so a setup made with the official image or another Seafile template keeps working.
 
@@ -129,7 +131,25 @@ Coming from another Seafile template: point **Data** at the same folder, copy ov
 
 <br>
 
-## 4. How AI is used here
+## 4. Web office
+
+Seafile can open Word, Excel and PowerPoint files in the browser and saves your changes as a new version of the file. The editor runs as a container of its own. Three work with Seafile: [Euro-Office](https://github.com/junkerderprovinz/euro-office), [Collabora Online](https://hub.docker.com/r/collabora/code) and [OnlyOffice](https://hub.docker.com/r/onlyoffice/documentserver). Pick one under **Web office suite** and fill in the two fields below it.
+
+| Web office suite | Office document server URL | Office JWT secret | In the editor's container |
+|---|---|---|---|
+| `euro-office` | The address the Euro-Office WebUI button opens, such as `http://192.168.1.10:9900` | The **JWT secret** of the Euro-Office container | Nothing else |
+| `onlyoffice` | The document server's address, such as `http://192.168.1.10:8080` | Its `JWT_SECRET` | Keep `JWT_ENABLED=true` |
+| `collabora` | Its address on port 9980, such as `http://192.168.1.10:9980` | Leave empty | Set `aliasgroup1` to Seafile's address, such as `http://192.168.1.10:8000`. Without https in front of it, also set `extra_params=--o:ssl.enable=false --o:ssl.termination=false` |
+
+- The browser loads the editor straight from the document server's address. If you open Seafile over https, that address has to be https as well, or the browser blocks the editor.
+- The editor fetches and saves the file through Seafile's **Server hostname**, so the editor's container must be able to reach that address.
+- The container log says `Office files open in euro-office at ...` when the setting has taken effect. A missing address or JWT secret stops the start with one line that names it.
+- Euro-Office needs about 5 GB of memory while it starts. With a 3 GB limit it never finished starting in my tests.
+- An office set up by hand in `seahub_settings.py` still wins over the template. Leave **Web office suite** at `off` in that case.
+
+<br>
+
+## 5. How AI is used here
 
 One knight builds this, and AI is one of the tools I work with, the same way I work with an editor or a compiler. It helps me write code and documentation and it checks my work, and that saves me a good many evenings. It does not make the decisions, though. I read and understand everything before it ships, and if something here breaks, that is on me and not on the tool.
 
@@ -137,7 +157,7 @@ You do not have to take my word for it. The code is open and every release note 
 
 <br>
 
-## 5. Support this project
+## 6. Support this project
 
 Questions? Check the [support thread](https://forums.unraid.net/topic/200798-support-junkerderprovinz-seafile-14/). Bugs, ideas or feature requests? Please [open a GitHub issue](https://github.com/junkerderprovinz/seafile/issues).
 
