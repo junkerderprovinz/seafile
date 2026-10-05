@@ -72,6 +72,7 @@ jobs:
             -e SEAFILE_SERVER_HOSTNAME=127.0.0.1:8080 \
             -e INIT_SEAFILE_ADMIN_EMAIL=admin@example.com \
             -e BUILTIN_MARIADB=true -e BUILTIN_REDIS=true -e ENABLE_NOTIFICATION_SERVER=true \
+            -e OFFICE=euro-office -e OFFICE_SERVER_URL=http://office.invalid:9900 -e OFFICE_JWT_SECRET=smoke \
             seafile:smoke
 
           wait_started() {
@@ -127,6 +128,21 @@ jobs:
           }
           [ "$(fetch)" = "${SENT}" ] || { echo "::error::The file came back different"; exit 1; }
 
+          # The editor itself is not part of the test. A document's page has to
+          # load it from the address in the template, which shows that Seahub
+          # picked up the office settings.
+          echo smoke > /tmp/smoke.docx
+          curl -fsS -H "$AUTH" -F file=@/tmp/smoke.docx -F parent_dir=/ "${UP}?ret-json=1" >/dev/null
+          JAR="$(mktemp)"
+          curl -fsS -c "$JAR" "$B/accounts/login/" >/dev/null
+          CSRF="$(awk '$6 == "sfcsrftoken" || $6 == "csrftoken" {print $7}' "$JAR" | tail -1)"
+          curl -fsS -b "$JAR" -c "$JAR" -e "$B/accounts/login/" \
+            --data-urlencode "csrfmiddlewaretoken=${CSRF}" --data-urlencode login=admin@example.com \
+            --data-urlencode "password=${PW}" "$B/accounts/login/" >/dev/null
+          curl -fsS -b "$JAR" "$B/lib/${REPO}/file/smoke.docx" > /tmp/docx.html
+          grep -qF 'http://office.invalid:9900/web-apps/apps/api/documents/api.js' /tmp/docx.html \
+            || { echo "::error::A document does not open in the office set in the template"; exit 1; }
+
           docker restart seafile-smoke >/dev/null
           wait_started 1
           [ "$(fetch)" = "${SENT}" ] || { echo "::error::The file is gone after a restart"; exit 1; }
@@ -152,6 +168,17 @@ jobs:
           docker rm -f seafile-noredis >/dev/null 2>&1 || true
           grep -q 'REDIS_HOST is empty' /tmp/noredis.log \
             || { cat /tmp/noredis.log; echo "::error::No message for a missing Redis host"; exit 1; }
+
+      - name: "Smoke test: an office without its JWT secret stops the start with one clear line"
+        run: |
+          set -euo pipefail
+          docker run --name seafile-nosecret \
+            -e SEAFILE_SERVER_HOSTNAME=localhost -e BUILTIN_MARIADB=true -e BUILTIN_REDIS=true \
+            -e OFFICE=euro-office -e OFFICE_SERVER_URL=http://office.invalid:9900 \
+            seafile:smoke > /tmp/nosecret.log 2>&1 || true
+          docker rm -f seafile-nosecret >/dev/null 2>&1 || true
+          grep -q 'OFFICE_JWT_SECRET is empty' /tmp/nosecret.log \
+            || { cat /tmp/nosecret.log; echo "::error::No message for a missing office JWT secret"; exit 1; }
 
       # Report-only, so a finding never blocks the build; results land in the
       # repository's Security tab.

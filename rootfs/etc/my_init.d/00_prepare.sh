@@ -91,6 +91,21 @@ if ! enabled "${BUILTIN_REDIS:-false}" && [ "${CACHE_PROVIDER:-redis}" = redis ]
     fail "REDIS_HOST is empty. Point it at your Redis server, or set BUILTIN_REDIS=true."
 fi
 
+office="${OFFICE:-off}"
+case "${office,,}" in
+    off) ;;
+    euro-office | onlyoffice | collabora)
+        if [ -z "${OFFICE_SERVER_URL:-}" ]; then
+            fail "OFFICE is ${office}, but OFFICE_SERVER_URL is empty. Set it to the editor's address, such as http://192.168.1.10:9900."
+        fi
+        if [ "${office,,}" != collabora ] && [ -z "${OFFICE_JWT_SECRET:-}" ]; then
+            fail "OFFICE is ${office}, but OFFICE_JWT_SECRET is empty. Set it to the JWT secret of the ${office} container."
+        fi
+        log "Office files open in ${office} at ${OFFICE_SERVER_URL}."
+        ;;
+    *) fail "OFFICE is ${office}. Use off, euro-office, collabora or onlyoffice." ;;
+esac
+
 if [ -z "${TIME_ZONE:-}" ] && [ -n "${TZ:-}" ]; then
     set_env TIME_ZONE "$TZ"
 fi

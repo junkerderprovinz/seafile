@@ -36,6 +36,13 @@ RUN sed -i 's|^    location / {|    include /etc/nginx/seafile.d/*.conf;\n\n&|' 
  && mkdir -p /etc/nginx/seafile.d \
  && chmod +x /etc/my_init.d/00_prepare.sh /etc/my_init.pre_shutdown.d/10_stop_seafile.sh /etc/sv/*/run /usr/local/bin/print-banner.sh /opt/seafile/notification-server
 
+# Seahub imports seahub/local_settings.py if it exists, and that is where the web
+# office from the template goes in. The grep stops the build if upstream drops
+# the import.
+RUN seahub="/opt/seafile/seafile-server-${SEAFILE_VERSION}/seahub/seahub" \
+ && grep -q '^    import seahub.local_settings$' "$seahub/settings.py" \
+ && mv /usr/local/share/seafile/local_settings.py "$seahub/"
+
 # The stock setup has no fallback for the database names and quits without them.
 # Seafile's own logs go to the container log, which is where Unraid users look
 # first.
