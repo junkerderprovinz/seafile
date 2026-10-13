@@ -6,7 +6,7 @@
 
 FROM seafileltd/notification-server:14.0.8-testing@sha256:bc6fe81de7c1af2dc08c184f2a3d558e21eca493c5362a2fc725e20a88fbb280 AS notification
 
-FROM seafileltd/seafile-mc:14.0.8-testing@sha256:a0b5e08392df7ad1958bf15d33344823f2eabaeedabb022458f499b5154ad4ed
+FROM seafileltd/seafile-mc:14.0.9-testing@sha256:61cabec327c2401258cf814a3c5aaa7323d07ef02551bb032508a263d5c874a4
 
 LABEL org.opencontainers.image.title="seafile (Unraid)" \
       org.opencontainers.image.description="Seafile for Unraid in one container: generated secrets, optional built-in MariaDB, Redis and notification server." \
