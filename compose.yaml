@@ -1,0 +1,31 @@
+# Built from the Unraid template in junkerderprovinz/unraid-apps by
+# .github/gen-compose.py. Change the template there, not this file.
+#
+# Folders are created next to this file on the first start. Point the ones
+# that hold your own files (downloads, storage and the like) at real folders
+# first, and fill in every value marked "required".
+
+services:
+  seafile:
+    image: junkerderprovinz/seafile:latest
+    container_name: seafile
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - "./appdata:/shared"
+    environment:
+      SEAFILE_SERVER_HOSTNAME: ""  # required
+      SEAFILE_SERVER_PROTOCOL: http
+      INIT_SEAFILE_ADMIN_EMAIL: ""  # required
+      BUILTIN_MARIADB: "true"
+      BUILTIN_REDIS: "true"
+      ENABLE_NOTIFICATION_SERVER: "false"
+      SEAFILE_MYSQL_DB_PORT: "3306"
+      SEAFILE_MYSQL_DB_USER: seafile
+      SEAFILE_MYSQL_DB_CCNET_DB_NAME: ccnet_db
+      SEAFILE_MYSQL_DB_SEAFILE_DB_NAME: seafile_db
+      SEAFILE_MYSQL_DB_SEAHUB_DB_NAME: seahub_db
+      REDIS_PORT: "6379"
+      OFFICE: "off"
+      ENABLE_SEADOC: "false"

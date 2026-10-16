@@ -129,6 +129,14 @@ docker run -d --name seafile \
 
 Coming from another Seafile template: point **Data** at the same folder, copy over the hostname, the database and Redis settings and the `JWT_PRIVATE_KEY`, and keep **Built-in MariaDB** off. Back up first: a Seafile 13 database is upgraded on the first start, and there is no way back. Every other variable of the official image works as the [Seafile manual](https://manual.seafile.com/latest/setup/setup_ce_by_docker/) describes it.
 
+### Other Docker hosts
+
+[compose.yaml](compose.yaml) runs Seafile on any Linux server with Docker. Put it in a folder of its own, fill in every value marked `required` and start it with `docker compose up -d`. The folders are created next to the file.
+
+- **Synology:** in Container Manager, create a project from the file (DSM 7.2 or newer).
+- **Proxmox:** run it in a VM or an LXC container that has Docker.
+- **MOS:** install Seafile from the [MOS Hub](https://mos-official.net/apps.html?search=Seafile).
+
 <br>
 
 ## 4. Web office
