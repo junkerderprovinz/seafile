@@ -15,9 +15,11 @@ LABEL org.opencontainers.image.title="seafile (Unraid)" \
       org.opencontainers.image.vendor="junkerderprovinz"
 
 # Ubuntu tracks security fixes inside the 10.11 and 7.0 series, so the versions
-# are left to the archive.
+# are left to the archive. The upgrade takes the fixes published since upstream
+# built the base image.
 # hadolint ignore=DL3008
 RUN apt-get update \
+ && apt-get upgrade -y \
  && apt-get install -y --no-install-recommends mariadb-server redis-server \
  && rm -rf /var/lib/apt/lists/* /var/lib/mysql/*
 
