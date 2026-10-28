@@ -21,6 +21,20 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends mariadb-server redis-server \
  && rm -rf /var/lib/apt/lists/* /var/lib/mysql/*
 
+# The base image carries PyJWT, certifi and pip at versions with open advisories,
+# and Seahub ships its own PyJWT and certifi in thirdpart, so both places are
+# replaced. --no-deps keeps pip away from everything else.
+# renovate: datasource=pypi depName=PyJWT
+ARG PYJWT_VERSION=2.15.1
+# renovate: datasource=pypi depName=certifi
+ARG CERTIFI_VERSION=2026.10.23
+# renovate: datasource=pypi depName=pip
+ARG PIP_VERSION=26.2.2
+RUN thirdpart="/opt/seafile/seafile-server-${SEAFILE_VERSION}/seahub/thirdpart" \
+ && pip3 install --no-cache-dir --no-deps "pip==${PIP_VERSION}" "PyJWT==${PYJWT_VERSION}" "certifi==${CERTIFI_VERSION}" \
+ && rm -rf "$thirdpart"/jwt "$thirdpart"/pyjwt-*.dist-info "$thirdpart"/certifi "$thirdpart"/certifi-*.dist-info \
+ && pip3 install --no-cache-dir --no-deps --target "$thirdpart" "PyJWT==${PYJWT_VERSION}" "certifi==${CERTIFI_VERSION}"
+
 COPY --from=notification /opt/seafile/notification-server /opt/seafile/notification-server
 COPY rootfs/ /
 COPY print-banner.sh /usr/local/bin/

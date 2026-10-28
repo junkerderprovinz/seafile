@@ -27,6 +27,20 @@
       "matchPackageNames": ["seafileltd/seafile-mc", "seafileltd/notification-server"],
       "groupName": "Seafile",
       "labels": ["base-image"]
+    },
+    {
+      "description": "Python packages in the final stage move together",
+      "matchDatasources": ["pypi"],
+      "groupName": "Python packages",
+      "labels": ["python-packages"]
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Python packages pinned in ARG lines that follow a renovate comment",
+      "managerFilePatterns": ["/(^|/)Dockerfile$/"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)\\nARG \\w+=(?<currentValue>[^\\s]+)"]
     }
   ]
 }
