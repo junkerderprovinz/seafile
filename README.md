@@ -23,10 +23,6 @@ secrets on the first start, and it can run MariaDB, Redis and the notification s
 same container when you have none of your own.
 </p>
 
-<p align="center">
-  <a href="https://github.com/junkerderprovinz/seafile/issues/new/choose"><img src=".github/assets/in-development.png" alt="In development, testers welcome: report a bug" width="100%"></a>
-</p>
-
 <br>
 
 <!-- download-buttons: written by scripts/gen_download_buttons.py -->
