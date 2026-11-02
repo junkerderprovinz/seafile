@@ -31,7 +31,7 @@ ARG PYJWT_VERSION=2.15.1
 # renovate: datasource=pypi depName=certifi
 ARG CERTIFI_VERSION=2026.10.23
 # renovate: datasource=pypi depName=dnspython
-ARG DNSPYTHON_VERSION=2.9.0
+ARG DNSPYTHON_VERSION=2.9.1
 # renovate: datasource=pypi depName=pip
 ARG PIP_VERSION=26.2.2
 RUN thirdpart="/opt/seafile/seafile-server-${SEAFILE_VERSION}/seahub/thirdpart" \
