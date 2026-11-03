@@ -23,7 +23,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends mariadb-server redis-server \
  && rm -rf /var/lib/apt/lists/* /var/lib/mysql/*
 
-# The base image carries PyJWT, certifi and pip at versions with open advisories,
+# The base image carries PyJWT, certifi, pyasn1 and pip at versions with open advisories,
 # and Seahub ships its own PyJWT, certifi and dnspython in thirdpart, so both
 # places are replaced. --no-deps keeps pip away from everything else.
 # renovate: datasource=pypi depName=PyJWT
@@ -32,10 +32,13 @@ ARG PYJWT_VERSION=2.15.1
 ARG CERTIFI_VERSION=2026.10.23
 # renovate: datasource=pypi depName=dnspython
 ARG DNSPYTHON_VERSION=2.9.1
+# renovate: datasource=pypi depName=pyasn1
+ARG PYASN1_VERSION=0.6.5
 # renovate: datasource=pypi depName=pip
 ARG PIP_VERSION=26.2.2
 RUN thirdpart="/opt/seafile/seafile-server-${SEAFILE_VERSION}/seahub/thirdpart" \
  && pip3 install --no-cache-dir --no-deps "pip==${PIP_VERSION}" "PyJWT==${PYJWT_VERSION}" "certifi==${CERTIFI_VERSION}" \
+        "pyasn1==${PYASN1_VERSION}" \
  && rm -rf "$thirdpart"/jwt "$thirdpart"/pyjwt-*.dist-info "$thirdpart"/certifi "$thirdpart"/certifi-*.dist-info \
            "$thirdpart"/dns "$thirdpart"/dnspython-*.dist-info \
  && pip3 install --no-cache-dir --no-deps --target "$thirdpart" \
