@@ -31,11 +31,11 @@ ARG PYJWT_VERSION=2.15.1
 # renovate: datasource=pypi depName=certifi
 ARG CERTIFI_VERSION=2026.10.23
 # renovate: datasource=pypi depName=dnspython
-ARG DNSPYTHON_VERSION=2.9.1
+ARG DNSPYTHON_VERSION=2.9.2
 # renovate: datasource=pypi depName=pyasn1
 ARG PYASN1_VERSION=0.6.5
 # renovate: datasource=pypi depName=pip
-ARG PIP_VERSION=26.2.2
+ARG PIP_VERSION=26.3
 RUN thirdpart="/opt/seafile/seafile-server-${SEAFILE_VERSION}/seahub/thirdpart" \
  && pip3 install --no-cache-dir --no-deps "pip==${PIP_VERSION}" "PyJWT==${PYJWT_VERSION}" "certifi==${CERTIFI_VERSION}" \
         "pyasn1==${PYASN1_VERSION}" \
