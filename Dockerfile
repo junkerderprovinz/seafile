@@ -16,7 +16,9 @@ LABEL org.opencontainers.image.title="seafile (Unraid)" \
 
 # Ubuntu tracks security fixes inside the 10.11 and 7.0 series, so the versions
 # are left to the archive. The upgrade takes the fixes published since upstream
-# built the base image.
+# built the base image. CI passes a new APT_REFRESH every week, otherwise the
+# build cache would serve the first upgrade until a line above it changes.
+ARG APT_REFRESH
 # hadolint ignore=DL3008
 RUN apt-get update \
  && apt-get upgrade -y \
@@ -24,8 +26,8 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/* /var/lib/mysql/*
 
 # The base image carries PyJWT, certifi, pyasn1 and pip at versions with open advisories,
-# and Seahub ships its own PyJWT, certifi and dnspython in thirdpart, so both
-# places are replaced. --no-deps keeps pip away from everything else.
+# and Seahub ships its own PyJWT, certifi, dnspython and oauthlib in thirdpart,
+# so both places are replaced. --no-deps keeps pip away from everything else.
 # renovate: datasource=pypi depName=PyJWT
 ARG PYJWT_VERSION=2.15.1
 # renovate: datasource=pypi depName=certifi
@@ -36,13 +38,16 @@ ARG DNSPYTHON_VERSION=2.9.2
 ARG PYASN1_VERSION=0.6.5
 # renovate: datasource=pypi depName=pip
 ARG PIP_VERSION=26.3
+# renovate: datasource=pypi depName=oauthlib
+ARG OAUTHLIB_VERSION=4.0.1
 RUN thirdpart="/opt/seafile/seafile-server-${SEAFILE_VERSION}/seahub/thirdpart" \
  && pip3 install --no-cache-dir --no-deps "pip==${PIP_VERSION}" "PyJWT==${PYJWT_VERSION}" "certifi==${CERTIFI_VERSION}" \
         "pyasn1==${PYASN1_VERSION}" \
  && rm -rf "$thirdpart"/jwt "$thirdpart"/pyjwt-*.dist-info "$thirdpart"/certifi "$thirdpart"/certifi-*.dist-info \
-           "$thirdpart"/dns "$thirdpart"/dnspython-*.dist-info \
+           "$thirdpart"/dns "$thirdpart"/dnspython-*.dist-info "$thirdpart"/oauthlib "$thirdpart"/oauthlib-*.dist-info \
  && pip3 install --no-cache-dir --no-deps --target "$thirdpart" \
-        "PyJWT==${PYJWT_VERSION}" "certifi==${CERTIFI_VERSION}" "dnspython==${DNSPYTHON_VERSION}"
+        "PyJWT==${PYJWT_VERSION}" "certifi==${CERTIFI_VERSION}" "dnspython==${DNSPYTHON_VERSION}" \
+        "oauthlib==${OAUTHLIB_VERSION}"
 
 COPY --from=notification /opt/seafile/notification-server /opt/seafile/notification-server
 COPY rootfs/ /
