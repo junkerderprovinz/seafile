@@ -16,7 +16,9 @@ LABEL org.opencontainers.image.title="seafile (Unraid)" \
 
 # Ubuntu tracks security fixes inside the 10.11 and 7.0 series, so the versions
 # are left to the archive. The upgrade takes the fixes published since upstream
-# built the base image.
+# built the base image. CI passes a new APT_REFRESH every week, otherwise the
+# build cache would serve the first upgrade until a line above it changes.
+ARG APT_REFRESH
 # hadolint ignore=DL3008
 RUN apt-get update \
  && apt-get upgrade -y \
