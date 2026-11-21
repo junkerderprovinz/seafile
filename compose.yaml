@@ -7,7 +7,7 @@
 
 services:
   seafile:
-    image: junkerderprovinz/seafile:latest
+    image: junkerderprovinz/seafile:latest@sha256:c7f7f1c029dc0a395366296c4163122e77d822d985000773b37f432355e816ee
     container_name: seafile
     restart: unless-stopped
     ports:
