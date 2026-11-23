@@ -4,7 +4,7 @@
 # MariaDB, Redis and the notification server in the same container. /shared keeps
 # the stock layout, so existing setups can switch to this image.
 
-FROM seafileltd/notification-server:14.0.10-testing@sha256:30f3a57cdcd1267c78c43c518229c3e5d864532c2aed1dac4142a46f9e4f484d AS notification
+FROM seafileltd/notification-server:14.0.11-testing@sha256:c3927b8693a225799858af83083986704a12c93eb89b132fbcebe1dab05fbb7f AS notification
 
 FROM seafileltd/seafile-mc:14.0.9-testing@sha256:61cabec327c2401258cf814a3c5aaa7323d07ef02551bb032508a263d5c874a4
 
