@@ -147,6 +147,8 @@ Coming from another Seafile template: point **Data** at the same folder, copy ov
 [compose.yaml](compose.yaml) runs Seafile on any Linux server with Docker. Put it in a folder of its own, fill in every value marked `required` and start it with `docker compose up -d`. The folders are created next to the file.
 
 - **Synology:** in Container Manager, create a project from the file (DSM 7.2 or newer).
+- **Ugreen:** in the Docker app of UGOS Pro, create a project from the file.
+- **QNAP:** in Container Station, create an application from the file.
 - **Proxmox:** see [Proxmox VE](#proxmox-ve) below.
 - **MOS:** install Seafile from the [MOS Hub](https://mos-official.net/apps.html?search=Seafile).
 - **ZimaOS and CasaOS:** add the [community store](https://github.com/junkerderprovinz/zimaos-apps#install) and install Seafile from it.
