@@ -191,6 +191,8 @@ In Container Station, open **Applications** and click **Create**. Paste [compose
 
 In the Docker app of UGOS Pro, open **Project** and click **Create**. Pick a folder for Seafile and paste [compose.yaml](compose.yaml).
 
+Seafile is built for x86 (amd64) only for now, so it does not run on NAS models with an ARM processor.
+
 <sub>The Synology logo is a trademark of Synology Inc. and the QNAP logo a trademark of QNAP Systems, Inc., both registered in Taiwan and other regions.</sub>
 
 <br>
